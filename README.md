@@ -8,3 +8,5 @@
 > 如果弹出Github登陆窗，再登陆一遍
 5. 开始同步，根据弹出的错误提示安装**Platform**和**build tools**
 6. 完成后应该是没有Error的
+
+# [完整Wiki](https://github.com/eysure/IndoorLocationNG/wiki)
