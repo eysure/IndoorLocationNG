@@ -1,7 +1,6 @@
 package com.zjut.henry.indoorlocationng;
 
 import android.graphics.PointF;
-import android.util.Log;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,9 +30,12 @@ public class LocationLayer extends TimerTask{
         }
         else sRouter.clear();
 
-        // 新位置产生
-        Log.i("LocationLayer","Now: "+RegionLayer.getRegionNow()+" "+sRouter.get());
-        LocationController.updateLocationResult(new LocationResult());
+        // 新位置产生, 发送到回调
+        LocationResult result = new LocationResult();
+        result.setCoordination(sRouter.get(),GlobalParameter.RESULT_SCALE);
+        result.setNearestDevice((sBeaconsActive!=null && sBeaconsActive.size()>0)?sBeaconsActive.get(0).getMac():null);
+        result.setAngle(StepNav.getCompassOrientation()<0?(int)StepNav.getCompassOrientation()+360:(int)StepNav.getCompassOrientation());
+        LocationController.updateLocationResult(result);
     }
 
     /**

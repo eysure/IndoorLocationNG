@@ -33,4 +33,7 @@ class GlobalParameter {
 
     // 质心定位算法参数
     static double LOCATION_WEIGHTED_CENTROID_ALPHA = 3.0D;
+
+    // 结果比例尺(输出 = 定位结果(cm) / 结果比例尺)
+    static double RESULT_SCALE = 100;
 }

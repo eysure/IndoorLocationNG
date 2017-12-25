@@ -52,11 +52,14 @@ public class DemoActivity extends Activity {
         initView(this);
         requestPermission();
 
-        LocationController locationController = new LocationController(this);
+        final LocationController locationController = new LocationController(this);
         locationController.setOnLocationUpdateListener(new LocationController.OnLocationUpdateListener() {
             @Override
             public void onLocationUpdate(LocationResult locationResult) {
                 // 位置更新回调处理
+                locationResult.setUserInfo("0200000000000");
+                locationResult.setInfo("FromZJUT");
+                Log.i("Location",locationResult.getJSONObject().toString());
             }
         });
         locationController.setOnBeaconUpdateListener(new LocationController.OnBeaconUpdateListener() {

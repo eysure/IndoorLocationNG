@@ -166,4 +166,12 @@ public class LocationController {
     public void setLocationWeightedCentroidAlpha(double locationWeightedCentroidAlpha) {
         LOCATION_WEIGHTED_CENTROID_ALPHA = locationWeightedCentroidAlpha;
     }
+
+    public double getResultScale() {
+        return RESULT_SCALE;
+    }
+
+    public void setResultScale(double resultScale) {
+        RESULT_SCALE = resultScale;
+    }
 }
