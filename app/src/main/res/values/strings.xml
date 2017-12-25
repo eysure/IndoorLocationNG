@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">IndoorLocationNG</string>
+    <string name="bluetooth_off_warning">为使用服务,请保持蓝牙开启</string>
+</resources>

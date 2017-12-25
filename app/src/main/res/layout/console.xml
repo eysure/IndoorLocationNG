@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_weight="1"
+        android:id="@+id/log"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#000000"
+        android:fastScrollEnabled="true"
+        android:fontFamily="monospace"
+        android:paddingStart="12sp"
+        android:paddingEnd="12sp"
+        android:scrollbarStyle="insideOverlay"
+        android:scrollbars="vertical"
+        android:textColor="#EEEEEE"
+        android:textSize="12sp"
+        android:text="\n"
+        tools:text="\nDEBUG TEXT"/>
+
+    <LinearLayout
+        android:id="@+id/cmd_input_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/background_dark"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/cmd_input"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:hint="Command"
+            android:imeActionId="66"
+            android:imeActionLabel="Send"
+            android:imeOptions="actionSend"
+            android:inputType="text"
+            android:paddingEnd="8dp"
+            android:paddingStart="8dp"
+            android:singleLine="true"
+            android:textColor="#EEE"
+            android:textColorHint="@android:color/darker_gray"
+            android:textColorLink="@android:color/background_light"
+            tools:ignore="LabelFor"/>
+
+        <Button
+            android:textColor="#EEE"
+            android:id="@+id/cmd_send_button"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:text="Go"/>
+    </LinearLayout>
+
+</LinearLayout>
