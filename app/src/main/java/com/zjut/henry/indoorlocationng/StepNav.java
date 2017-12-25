@@ -14,10 +14,25 @@ import java.util.List;
 
 /**
  * 惯性导航
+ * (这个类一下子看不懂先别看, 把其他的搞定)
+ *
  * Created by henry on 10/26/17.
  */
 
 public class StepNav implements SensorEventListener {
+
+    // Listener
+    private OnStepUpdateListener sOnStepUpdateListener;
+
+    // Callback
+    public interface OnStepUpdateListener {
+        void onStepUpdate();
+    }
+
+    // Listener Setter
+    void setOnStepUpdateListener(OnStepUpdateListener onStepUpdateListener) {
+        sOnStepUpdateListener = onStepUpdateListener;
+    }
 
     // Window
     private static final int ACCELERATION_WINDOW = 3;
@@ -70,7 +85,7 @@ public class StepNav implements SensorEventListener {
     private EyFilter mSinFilter = new EyFilter(ORIENTATION_WINDOW);
     private EyFilter mCosFilter = new EyFilter(ORIENTATION_WINDOW);
 
-    public StepNav(Context context) {
+    StepNav(Context context) {
         SensorManager sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         if(sensorManager==null)return;
         Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
@@ -138,6 +153,9 @@ public class StepNav implements SensorEventListener {
     }
 
     private void newStep(){
+
+        sOnStepUpdateListener.onStepUpdate();
+
         float[] currentStep = {0f,0f};
         double sin = mSinFilter.get();
         double cos = mCosFilter.get();
@@ -179,7 +197,6 @@ public class StepNav implements SensorEventListener {
     }
 
     // -------------Public method
-
 
     // return and flash distance
     public float[] getCoord(){

@@ -21,16 +21,19 @@ import static com.zjut.henry.indoorlocationng.ServerConnection.*;
 
 /**
  * LocationService
- * 主服务类, 整个程序的入口是这个类
+ * 定位服务类
+ *
  * Created by henry on 12/3/17.
  */
-class LocationService extends Service {
+public class LocationService extends Service {
     private static final int NOTIFICATION_ID = -1213;
 
     private static Context sContext;
     public static Handler sHandler;
+    private static StepNav sStepNav;
     BluetoothLayer mBluetoothLayer;
     private static NotificationManager sNotificationManager;
+    private static TimerTask sLocationLayer = new LocationLayer();
 
     /**
      * 只有在Service被创建的时刻被调用
@@ -42,11 +45,25 @@ class LocationService extends Service {
         initialHandler();
         new Thread(new ServerConnection(), "NetworkThread").start();
         ServerConnection.activateLinkStart();
-        new Timer().schedule(mBluetoothDaemon,GlobalParameter.SERVICE_DAEMON_PERIOD,GlobalParameter.SERVICE_DAEMON_PERIOD);
+        new Timer()
+                .schedule(mBluetoothDaemon,GlobalParameter.SERVICE_DAEMON_PERIOD,GlobalParameter.SERVICE_DAEMON_PERIOD);
         registerPowerLock();
         sNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mBluetoothLayer = new BluetoothLayer(this);
-        new StepNav(this);
+        new Timer()
+                .schedule(BeaconLinkLayer.sScavenger,GlobalParameter.BEACON_ONLINE_LIFE,GlobalParameter.BEACON_ONLINE_LIFE);   // 启动BeaconLinkLayer的Beacon过期清理任务
+        new Timer()
+                .schedule(RegionLayer.sRegionSwift,GlobalParameter.REGION_SWIFT_PERIOD,GlobalParameter.REGION_SWIFT_PERIOD);   // 启动地点切换器扫描任务
+        new Timer()
+                .schedule(sLocationLayer,GlobalParameter.LOCATION_PERIOD,GlobalParameter.LOCATION_PERIOD);   // 启动定位任务
+
+        sStepNav = new StepNav(this);
+        sStepNav.setOnStepUpdateListener(new StepNav.OnStepUpdateListener() {
+            @Override
+            public void onStepUpdate() {
+                sLocationLayer.run();
+            }
+        });
     }
 
     /**

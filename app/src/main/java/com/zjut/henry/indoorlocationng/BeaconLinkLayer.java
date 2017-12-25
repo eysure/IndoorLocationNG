@@ -38,6 +38,7 @@ public class BeaconLinkLayer {
          */
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
+            LocationController.updateBeaconResult(result);                                          // 先发送给回调接口
             String mac = result.getDevice().getAddress();                                           // 从result包中得到Beacon MAC地址
             int rssi = result.getRssi();                                                            // 从result包中得到RSSI信号强度
             String status;
@@ -64,10 +65,10 @@ public class BeaconLinkLayer {
                 }
             }
 
-            if (!status.equals("Raw")) {
+            if(!"Raw".equals(status)) {
                 Log.d("BeaconLinkLayer", "Beacon " + mac + "\t" + rssi + "\t[ " + status + " ]");
                 LocationService.updateNotification(
-                        "Current: " + RegionLayer.getRegionNow(),
+                        "当前位置: " + RegionLayer.getRegionNow(),
                         "[" + status + "] " + mac + "\t" + rssi);     // 更新通知栏
             }
         }
@@ -251,18 +252,6 @@ public class BeaconLinkLayer {
     private static boolean isCacheExpired(Beacon beacon) {
         return beacon.getCacheDate() == null ||
                 (double) ((new Date()).getTime() - beacon.getCacheDate().getTime()) > GlobalParameter.BEACON_CACHE_LIFE;
-    }
-
-    /**
-     * 打印BeaconCache列表
-     *
-     * @return BeaconCache列表
-     */
-    public static String cacheToString() {
-        StringBuilder sb = new StringBuilder();
-        for (Beacon beacon : sBeaconCache)
-            sb.append(beacon.getMac()).append(" ").append(beacon.getCacheDate().toLocaleString()).append("\n");
-        return sb.toString();
     }
 
 }

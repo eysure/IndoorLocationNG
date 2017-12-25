@@ -15,7 +15,7 @@ import android.util.Log;
  * 此Activity无UI, Create后开启服务便Destroy
  * Created by henry on 12/3/17.
  */
-class LocationDaemonActivity extends Activity {
+public class LocationDaemonActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

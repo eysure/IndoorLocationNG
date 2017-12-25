@@ -1,5 +1,6 @@
 package com.zjut.henry.indoorlocationng;
 
+import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
 
@@ -15,6 +16,7 @@ import static com.zjut.henry.indoorlocationng.GlobalParameter.*;
 
 public class LocationController {
     private Context mContext;
+    private static OnBeaconUpdateListener sOnBeaconUpdateListener;
     private static OnLocationUpdateListener sOnLocationUpdateListener;
 
     /**
@@ -58,9 +60,37 @@ public class LocationController {
 
     /**
      * 注册一个回调, 当位置更新时即被唤起
+     * @param locationResult 更新的位置结果
      */
-    public static void updateLocationResult(LocationResult locationResult) {
+    static void updateLocationResult(LocationResult locationResult) {
         sOnLocationUpdateListener.onLocationUpdate(locationResult);
+    }
+
+    /**
+     * 设置Beacon更新回调监听器
+     * @param onBeaconUpdateListener Beacon更新回调监听器
+     */
+    public void setOnBeaconUpdateListener(OnBeaconUpdateListener onBeaconUpdateListener) {
+        sOnBeaconUpdateListener = onBeaconUpdateListener;
+    }
+
+    /**
+     * Beacon传入的接口定义, 在Beacon(BLE)传入时被唤起
+     */
+    public interface OnBeaconUpdateListener {
+        /**
+         * Beacon传入回调
+         * @param scanResult Beacon传入结果
+         */
+        void onBeaconUpdate(ScanResult scanResult);
+    }
+
+    /**
+     * 注册一个回调，当Beacon(BLE)传入时被唤起
+     * @param scanResult 传入的ScanResult
+     */
+    static void updateBeaconResult(ScanResult scanResult) {
+        sOnBeaconUpdateListener.onBeaconUpdate(scanResult);
     }
 
     // -------------Setter & Getter-------------

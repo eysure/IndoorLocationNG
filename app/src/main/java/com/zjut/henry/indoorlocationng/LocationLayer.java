@@ -82,13 +82,6 @@ public class LocationLayer extends TimerTask{
     }
 
     /**
-     * 地点更换, 当前位置置零
-     */
-    public static void clearLocation() {
-        sRouter.clear();
-    }
-
-    /**
      * 获取平滑器位置
      * @return 平滑器当前位置
      */

@@ -17,8 +17,7 @@ class GlobalParameter {
     static long SERVICE_DAEMON_PERIOD = 10000;
 
     // BeaconCache 生命时长
-    // public static final long BEACON_CACHE_LIFE = 2 * 1000 * 60 * 60 * 24;    // 2 天
-    static long BEACON_CACHE_LIFE = 10 * 1000;
+    static long BEACON_CACHE_LIFE = 2 * 1000 * 60 * 60 * 24;    // 2 天
 
     // 在线Beacon生命时长
     static long BEACON_ONLINE_LIFE = 3000;                     // 3 秒
@@ -27,7 +26,7 @@ class GlobalParameter {
     static long REGION_SWIFT_PERIOD = 1000;
 
     // 定位间隔
-    static long LOCATION_PERIOD = 200;
+    static long LOCATION_PERIOD = 5000;
 
     // 定位使用的Beacon数目
     static int LOCATION_BEACON_QUANTITY = 4;

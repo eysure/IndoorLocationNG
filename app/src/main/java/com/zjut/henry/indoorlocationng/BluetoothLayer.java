@@ -47,12 +47,6 @@ class BluetoothLayer {
      */
     BluetoothLayer(Context context) {
         sBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        new Timer()
-                .schedule(BeaconLinkLayer.sScavenger,GlobalParameter.BEACON_ONLINE_LIFE,GlobalParameter.BEACON_ONLINE_LIFE);   // 启动BeaconLinkLayer的Beacon过期清理任务
-        new Timer()
-                .schedule(RegionLayer.sRegionSwift,GlobalParameter.REGION_SWIFT_PERIOD,GlobalParameter.REGION_SWIFT_PERIOD);   // 启动地点切换器扫描任务
-        new Timer()
-                .schedule(new LocationLayer(),GlobalParameter.LOCATION_PERIOD,GlobalParameter.LOCATION_PERIOD);   // 启动定位任务
         if(isBluetoothLeSupport(context)) {
             context.registerReceiver(mReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
             if(sBluetoothAdapter.isEnabled())startScan();

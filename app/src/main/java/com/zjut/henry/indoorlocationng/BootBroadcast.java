@@ -9,7 +9,7 @@ import android.content.Intent;
  * Created by henry on 12/3/17.
  */
 
-class BootBroadcast extends BroadcastReceiver {
+public class BootBroadcast extends BroadcastReceiver {
 
     /**
      * 接收到开机启动广播后启动服务
