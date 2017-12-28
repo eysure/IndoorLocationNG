@@ -20,15 +20,16 @@ public class LocationResult {
     private JSONObject json;
 
     private String time;
-    private double x;
-    private double y;
-    private int buildID;
-    private int floorID;
+    private String buildID;
+    private String floorID;
     private int angle;
     private String nearestDeviceID;
     private String userID;
     private int errorCode;
     private String info;
+
+    private PointF originCoordination = new PointF(0,0);
+    private PointF scaledCoordination = new PointF(0,0);
 
     LocationResult() {
         try {
@@ -48,7 +49,7 @@ public class LocationResult {
      * @param buildID 建筑ID
      * @param floorID 楼层ID
      */
-    public void setRegion(int buildID, int floorID) {
+    public void setRegion(String buildID, String floorID) {
         try {
             this.buildID = buildID;
             this.floorID = floorID;
@@ -67,10 +68,10 @@ public class LocationResult {
      */
     void setCoordination(PointF coordination, double scale) {
         try {
-            x = coordination.x / scale;
-            y = coordination.y / scale;
-            json.put("x", x);
-            json.put("y", y);
+            originCoordination.set(coordination);
+            scaledCoordination.set((float)(coordination.x / scale),(float)(coordination.y / scale));
+            json.put("x", scaledCoordination.x);
+            json.put("y", scaledCoordination.y);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -135,19 +136,11 @@ public class LocationResult {
         return time;
     }
 
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
-    }
-
-    public int getBuildID() {
+    public String getBuildID() {
         return buildID;
     }
 
-    public int getFloorID() {
+    public String getFloorID() {
         return floorID;
     }
 
@@ -169,5 +162,13 @@ public class LocationResult {
 
     public String getInfo() {
         return info;
+    }
+
+    public PointF getOriginCoordination() {
+        return originCoordination;
+    }
+
+    public PointF getScaledCoordination() {
+        return scaledCoordination;
     }
 }

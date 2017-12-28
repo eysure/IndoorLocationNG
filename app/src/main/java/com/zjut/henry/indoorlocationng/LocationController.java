@@ -90,7 +90,15 @@ public class LocationController {
      * @param scanResult 传入的ScanResult
      */
     static void updateBeaconResult(ScanResult scanResult) {
-        sOnBeaconUpdateListener.onBeaconUpdate(scanResult);
+        if(scanResult!=null) sOnBeaconUpdateListener.onBeaconUpdate(scanResult);
+    }
+
+    /**
+     * 手动获得定位结果
+     * @return 当前定位结果
+     */
+    public static LocationResult getLocationResult() {
+        return LocationLayer.toResult();
     }
 
     // -------------Setter & Getter-------------

@@ -21,7 +21,7 @@ class JSONProcess {
      *
      * @param s string
      */
-    public static void process(String s) {
+    static void process(String s) {
         try {
             Object json = new JSONTokener(s).nextValue();
             if (json instanceof JSONObject) {

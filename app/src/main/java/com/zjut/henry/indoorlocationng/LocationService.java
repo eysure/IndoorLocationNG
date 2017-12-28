@@ -29,7 +29,6 @@ public class LocationService extends Service {
     private static final int NOTIFICATION_ID = -1213;
 
     private static Context sContext;
-    public static Handler sHandler;
     private static StepNav sStepNav;
     BluetoothLayer mBluetoothLayer;
     private static NotificationManager sNotificationManager;
@@ -42,19 +41,18 @@ public class LocationService extends Service {
     @Override
     public void onCreate() {
         sContext = this;
-        initialHandler();
         new Thread(new ServerConnection(), "NetworkThread").start();
         ServerConnection.activateLinkStart();
-        new Timer()
-                .schedule(mBluetoothDaemon,GlobalParameter.SERVICE_DAEMON_PERIOD,GlobalParameter.SERVICE_DAEMON_PERIOD);
         registerPowerLock();
         sNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mBluetoothLayer = new BluetoothLayer(this);
-        new Timer()
-                .schedule(BeaconLinkLayer.sScavenger,GlobalParameter.BEACON_ONLINE_LIFE,GlobalParameter.BEACON_ONLINE_LIFE);   // 启动BeaconLinkLayer的Beacon过期清理任务
-        new Timer()
+        new Timer("Timer - Daemon")
+                .schedule(mBluetoothDaemon,GlobalParameter.SERVICE_DAEMON_PERIOD,GlobalParameter.SERVICE_DAEMON_PERIOD);
+        new Timer("Timer - Scavenger")
+                .schedule(BeaconLinkLayer.sScavenger,1000,1000);   // 启动BeaconLinkLayer的Beacon过期清理任务
+        new Timer("Timer - Regin Swifter")
                 .schedule(RegionLayer.sRegionSwift,GlobalParameter.REGION_SWIFT_PERIOD,GlobalParameter.REGION_SWIFT_PERIOD);   // 启动地点切换器扫描任务
-        new Timer()
+        new Timer("Timer - Location")
                 .schedule(sLocationLayer,GlobalParameter.LOCATION_PERIOD,GlobalParameter.LOCATION_PERIOD);   // 启动定位任务
 
         sStepNav = new StepNav(this);
@@ -146,28 +144,4 @@ public class LocationService extends Service {
         wakeLock.acquire();
     }
 
-    /**
-     * 初始化Handler
-     */
-    private void initialHandler() {
-        sHandler = new Handler(Looper.myLooper()) {
-            @Override
-            public void handleMessage(Message msg) {
-                Bundle b = msg.getData();
-                if(b!=null)switch (msg.what) {
-                    // Get network status and show warning
-                    case CONNECTION_STATUS: {
-                        String status = b.getString("status");
-                        if(status==null)break;
-                        switch (status) {
-                            case "connected":Log.i("Service","Connected to server.");break;
-                            case "failed":Log.e("Service","Connection failed!");break;
-                            default:break;
-                        }break;
-                    }
-                    default:super.handleMessage(msg);break;
-                }
-            }
-        };
-    }
 }

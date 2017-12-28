@@ -3,9 +3,9 @@ package com.zjut.henry.demo;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.NotificationManager;
 import android.bluetooth.le.ScanResult;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -27,6 +27,8 @@ import com.zjut.henry.indoorlocationng.LocationLayer;
 import com.zjut.henry.indoorlocationng.LocationResult;
 import com.zjut.henry.indoorlocationng.R;
 import com.zjut.henry.indoorlocationng.RegionLayer;
+
+import java.io.File;
 
 import io.reactivex.functions.Consumer;
 
@@ -66,7 +68,6 @@ public class DemoActivity extends Activity {
             @Override
             public void onBeaconUpdate(ScanResult scanResult) {
                 // Beacon回调处理
-                // println(scanResult.getDevice().getAddress()+"\t"+scanResult.getDevice().getName()+"\t"+scanResult.getRssi());
             }
         });
         locationController.start();
@@ -218,9 +219,6 @@ public class DemoActivity extends Activity {
                             for (Beacon beacon : BeaconLinkLayer.getBeaconsOnline())
                                 println(beacon.toString());
                             break;
-                        case "pending":
-                            for (String mac : BeaconLinkLayer.getBeaconsPending()) println(mac);
-                            break;
                         case "cache":
                             for (Beacon beacon : BeaconLinkLayer.getBeaconsCache())
                                 println(beacon.toString());
@@ -259,6 +257,9 @@ public class DemoActivity extends Activity {
                 case "map":
                     mapInitial();
                     break;
+                case "location":println(LocationController.getLocationResult().getJSONObject().toString());break;
+                case "orginCoord":println(LocationController.getLocationResult().getOriginCoordination().toString());break;
+                case "scaledCoord":println(LocationController.getLocationResult().getScaledCoordination().toString());break;
                 default:
                     println("unknown command " + args[0]);
                     break;
@@ -277,11 +278,32 @@ public class DemoActivity extends Activity {
      * 选择照片
      */
     private void mapInitial() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(intent, REQUEST_PHOTO);
-        Toast.makeText(this, "选择 Region #" + RegionLayer.getRegionNow() + "的地图", Toast.LENGTH_SHORT).show();
+        File file = getMapFile();
+        if(file!=null) {
+            MapView map = (MapView) View.inflate(this, R.layout.map, null);
+            map.setImage(ImageSource.uri(Uri.fromFile(file)));
+            new AlertDialog.Builder(this)
+                    .setView(map)
+                    .create().show();
+        }
+    }
+
+    /**
+     * 地图文件JPG获取
+     * @return 地图JPG
+     */
+    private File getMapFile() {
+        File file = new File(getFilesDir(),RegionLayer.getRegionNow()+".jpg");
+        Toast.makeText(this, getFilesDir().toString(), Toast.LENGTH_LONG).show();
+        if (file.exists()) return file;
+        else {
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(intent, REQUEST_PHOTO);
+            Toast.makeText(this, "选择 Region #" + RegionLayer.getRegionNow() + "的地图", Toast.LENGTH_LONG).show();
+            return null;
+        }
     }
 
     /**
@@ -296,6 +318,7 @@ public class DemoActivity extends Activity {
         switch (requestCode) {
             case REQUEST_PHOTO: {
                 if (resultCode == RESULT_OK && data.getData() != null) {
+                    Toast.makeText(this, data.getDataString(), Toast.LENGTH_LONG).show();
                     MapView map = (MapView) View.inflate(this, R.layout.map, null);
                     map.setImage(ImageSource.uri(data.getData()));
                     new AlertDialog.Builder(this)

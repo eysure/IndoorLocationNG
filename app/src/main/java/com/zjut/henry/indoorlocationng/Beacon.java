@@ -119,4 +119,14 @@ public class Beacon {
     public double getRsmw() {
         return Math.pow(10,getRssi()/10D);
     }
+
+    public void copy(Beacon beacon) {
+        this.mac = beacon.getMac();
+        this.regionID = beacon.getRegionID();
+        this.building = beacon.getBuilding();
+        this.floor = beacon.getFloor();
+        this.coordination = new PointF();
+        this.coordination.set(beacon.getCoordination());
+
+    }
 }

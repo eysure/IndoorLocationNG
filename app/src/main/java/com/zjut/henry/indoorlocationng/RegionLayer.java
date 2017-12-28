@@ -19,7 +19,7 @@ public class RegionLayer {
     private static int sRegionNow = 0;
     private static SparseArray<Double> sRegionPower = new SparseArray<>();
     private static List<Beacon> sBeaconsCurrent = new ArrayList<>();
-    public static boolean sLock = false;
+    static boolean sLock = false;
 
     /**
      * 选择功率最大的楼层

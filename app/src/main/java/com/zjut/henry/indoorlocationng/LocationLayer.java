@@ -3,6 +3,7 @@ package com.zjut.henry.indoorlocationng;
 import android.graphics.PointF;
 
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -31,11 +32,9 @@ public class LocationLayer extends TimerTask{
         else sRouter.clear();
 
         // 新位置产生, 发送到回调
-        LocationResult result = new LocationResult();
-        result.setCoordination(sRouter.get(),GlobalParameter.RESULT_SCALE);
-        result.setNearestDevice((sBeaconsActive!=null && sBeaconsActive.size()>0)?sBeaconsActive.get(0).getMac():null);
-        result.setAngle(StepNav.getCompassOrientation()<0?(int)StepNav.getCompassOrientation()+360:(int)StepNav.getCompassOrientation());
+        LocationResult result = toResult();
         LocationController.updateLocationResult(result);
+        LocationService.updateNotification(result.getBuildID()+" "+result.getFloorID(),result.getScaledCoordination().toString());
     }
 
     /**
@@ -84,11 +83,23 @@ public class LocationLayer extends TimerTask{
     }
 
     /**
-     * 获取平滑器位置
-     * @return 平滑器当前位置
+     * 生成定位结果
+     * @return 定位结果
      */
-    public static PointF getLocation() {
-        return sRouter.get();
+    static LocationResult toResult() {
+        LocationResult result = new LocationResult();
+        result.setCoordination(sRouter.get(), GlobalParameter.RESULT_SCALE);
+        result.setAngle(StepNav.getCompassOrientation() < 0 ? (int) StepNav.getCompassOrientation() + 360 : (int) StepNav.getCompassOrientation());
+
+        try {
+            if(sBeaconsActive != null && sBeaconsActive.size() > 0) {
+                result.setRegion(sBeaconsActive.get(0).getBuilding(),sBeaconsActive.get(0).getFloor());
+                result.setNearestDevice(sBeaconsActive.get(0).getMac());
+            }
+            return result;
+        } catch (ConcurrentModificationException cme){
+            return result;
+        }
     }
 
     /**

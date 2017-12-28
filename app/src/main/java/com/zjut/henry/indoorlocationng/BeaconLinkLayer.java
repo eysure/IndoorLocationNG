@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -23,9 +22,9 @@ import java.util.TimerTask;
 public class BeaconLinkLayer {
 
     private static List<Beacon> sBeaconsOnline = new ArrayList<>();
-    private static List<String> sBeaconsPending = new ArrayList<>();
     private static List<Beacon> sBeaconCache = new ArrayList<>();
 
+    private static List<Beacon> sRecycleBin = new ArrayList<>();
     /**
      * BLE扫描回调
      */
@@ -41,35 +40,18 @@ public class BeaconLinkLayer {
             LocationController.updateBeaconResult(result);                                          // 先发送给回调接口
             String mac = result.getDevice().getAddress();                                           // 从result包中得到Beacon MAC地址
             int rssi = result.getRssi();                                                            // 从result包中得到RSSI信号强度
-            String status;
 
             // 夺命连环(#‵′)靠
             Beacon beacon = findOnlineBeaconByMac(mac);                                             // 询问在线列表是否有此地址的Beacon
-            if (beacon != null) {
-                status = "Online";
-                beacon.setRssi(rssi);                                                               // 如果存在, 直接更新RSSI值
-            } else {
+            if (beacon != null) beacon.setRssi(rssi);                                                               // 如果存在, 直接更新RSSI值
+            else {
                 beacon = cacheGet(mac);                                                             // 如果不存在, 则询问Cache是否保存此beacon
                 if (beacon != null) {
                     if (beacon.isReg()) {
-                        status = "Valid";
                         beacon.setRssi(rssi);
                         beaconListsProcess(true, beacon);                                // 如果Cache中存在, 添加到在线列表
-                    } else status = "Raw";
-                } else {
-                    status = "Pending";
-                    if (!sBeaconsPending.contains(mac)) {
-                        ServerConnection.requestBeacon(mac);                                        // 如果Cache也不存在(或Cache过期), 则向服务器询问
-                        sBeaconsPending.add(mac);
                     }
-                }
-            }
-
-            if(!"Raw".equals(status)) {
-                Log.d("BeaconLinkLayer", "Beacon " + mac + "\t" + rssi + "\t[ " + status + " ]");
-                LocationService.updateNotification(
-                        "当前位置: " + RegionLayer.getRegionNow(),
-                        "[" + status + "] " + mac + "\t" + rssi);     // 更新通知栏
+                } else ServerConnection.requestBeacon(mac);                                        // 如果Cache也不存在(或Cache过期), 则向服务器询问
             }
         }
 
@@ -114,30 +96,41 @@ public class BeaconLinkLayer {
     }
 
     /**
-     * 过期在线Beacon清理
+     * 过期在线Beacon清理, 每秒被执行
      * 在线Beacon列表需要维护, 当超过规定时间(BEACON_ONLINE_LIFE)都没有更新过RSSI值的Beacon, 移出列表
      * 此任务在BluetoothProcess构造时即被执行
      * 注意: 在遍历一个列表的时候不能执行remove操作, 会报错, 必须在遍历完成之后"清空回收站"
      */
-    public static TimerTask sScavenger = new TimerTask() {
+    static TimerTask sScavenger = new TimerTask() {
         @Override
         public void run() {
             try {
-                Log.i("BeaconLinkLayer", "Scavenger called.");
-                List<Beacon> recycleBin = new ArrayList<>();
                 Date now = new Date();
+
                 for (Beacon beacon : sBeaconsOnline) {
                     if (now.getTime() - beacon.getOnlineDate().getTime() > GlobalParameter.BEACON_ONLINE_LIFE) {
-                        recycleBin.add(beacon);
+                        sRecycleBin.add(beacon);
                     }
                 }
-                if (recycleBin.size() > 0) {
-                    for (Beacon beacon : recycleBin) beaconListsProcess(false, beacon);
-                    Log.i("BeaconLinkLayer", "Removed: " + Arrays.toString(recycleBin.toArray()));
+                if (sRecycleBin.size() > 0) {
+                    for (Beacon beacon : sRecycleBin) beaconListsProcess(false, beacon);
+                    Log.d("BeaconLinkLayer", "Offline: " + Arrays.toString(sRecycleBin.toArray()));
                 }
-                for (String mac : sBeaconsPending) ServerConnection.requestBeacon(mac);
+                sRecycleBin.clear();
+                for (Beacon beacon : sBeaconCache) {
+                    if (now.getTime() - beacon.getCacheDate().getTime() > GlobalParameter.BEACON_CACHE_LIFE) {
+                        sRecycleBin.add(beacon);
+                    }
+                }
+                if (sRecycleBin.size() > 0) {
+                    sBeaconCache.removeAll(sRecycleBin);
+                    Log.d("BeaconLinkLayer", "Cache expired: " + Arrays.toString(sRecycleBin.toArray()));
+                }
+                sRecycleBin.clear();
+
+                // for (String mac : sBeaconsPending) ServerConnection.requestBeacon(mac);
             } catch (ConcurrentModificationException cme) {
-                Log.e("BeaconLinkLayer", "Scavenger Concurrent Modification Exception.");
+                Log.e("Scavenger", "CME");
             }
         }
     };
@@ -149,15 +142,6 @@ public class BeaconLinkLayer {
      */
     public static List<Beacon> getBeaconsOnline() {
         return sBeaconsOnline;
-    }
-
-    /**
-     * 获得网络阻塞Beacon列表
-     *
-     * @return 当前网络阻塞Beacon列表
-     */
-    public static List<String> getBeaconsPending() {
-        return sBeaconsPending;
     }
 
     /**
@@ -175,7 +159,7 @@ public class BeaconLinkLayer {
      * @param addOrDelete true - 增加 / false - 删除
      * @param beacon      待操作的Beacon
      */
-    public static void beaconListsProcess(boolean addOrDelete, Beacon beacon) {
+    private static void beaconListsProcess(boolean addOrDelete, Beacon beacon) {
         // Online List
         if (addOrDelete) sBeaconsOnline.add(beacon);
         else sBeaconsOnline.remove(beacon);
@@ -192,31 +176,20 @@ public class BeaconLinkLayer {
      *
      * @param beacon 返回的Beacon
      */
-    public static void addBeaconCacheFromServer(Beacon beacon) {
-        boolean flag = false;
-        for (String mac : sBeaconsPending) {
-            if (mac.equals(beacon.getMac())) {
-                Log.i("BeaconLinkLayer", "Server return. " + mac + " Region: " + beacon.getBuilding() + ":" + beacon.getFloor() + "\t" + beacon.getCoordination());
-                flag = true;
-                break;
+    static void addBeaconCacheFromServer(Beacon beacon) {
+        try {
+            Beacon pointer = null;
+            for(Beacon b : sBeaconCache){
+                if (b.getMac().equals(beacon.getMac()))pointer = b;
             }
+            if(pointer!=null) sBeaconCache.remove(pointer);
+            beacon.setCacheDate(new Date());
+            sBeaconCache.add(beacon);
+            Log.d("BeaconCache", "Add:\t"+ beacon.getMac() + beacon.getRegionID() + ":" + beacon.getCoordination());
+        }catch (ConcurrentModificationException cme) {
+            Log.e("BeaconCache", "CME");
+            addBeaconCacheFromServer(beacon);
         }
-        if (flag) sBeaconsPending.remove(beacon.getMac());
-
-        // update Cache
-        beacon.setCacheDate(new Date());
-        Beacon pointer = null;
-        for (Beacon b : sBeaconCache) {
-            if (b.getMac().equals(beacon.getMac())) {
-                pointer = b;
-                break;
-            }
-        }
-        if (pointer != null) {
-            sBeaconCache.remove(pointer);
-        }
-        sBeaconCache.add(beacon);
-        Log.d("BeaconCache", "After:\t" + beacon.getRegionID() + ":" + beacon.getCoordination());
     }
 
     /**
@@ -226,32 +199,10 @@ public class BeaconLinkLayer {
      * @return 对应的Beacon 若没有找到则返回null
      */
     private static Beacon cacheGet(String mac) {
-        try {
-            Iterator<Beacon> it = sBeaconCache.iterator();
-            while (it.hasNext()) {
-                Beacon beacon = it.next();
-                if (isCacheExpired(beacon)) {
-                    Log.d("BeaconCache", beacon.getMac() + " is Expired.");
-                    it.remove();
-                    if (beacon.getMac().equals(mac)) return null;
-                } else if (beacon.getMac().equals(mac)) return beacon;
-            }
-            return null;
-        } catch (ConcurrentModificationException cme) {
-            Log.e("BeaconCache", "Cache get Concurrent Modification Exception.");
-            return null;
+        for (Beacon beacon : sBeaconCache) {
+            if(mac.equals(beacon.getMac()))return beacon;
         }
-    }
-
-    /**
-     * 判断Cache中的某个Beacon是否过期
-     *
-     * @param beacon 给定Beacon
-     * @return true - 已过期 / false - 有效
-     */
-    private static boolean isCacheExpired(Beacon beacon) {
-        return beacon.getCacheDate() == null ||
-                (double) ((new Date()).getTime() - beacon.getCacheDate().getTime()) > GlobalParameter.BEACON_CACHE_LIFE;
+        return null;
     }
 
 }

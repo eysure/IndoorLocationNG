@@ -79,16 +79,13 @@ class ServerConnection implements Runnable {
     // Network Thread：Connect to server
     private void linkStart(String ip, int port) {
         try {
-            resultProcess("NTS,connecting," + ip + "," + port);
             mSocket = new Socket(ip, port);
             mDataInputStream = new DataInputStream(mSocket.getInputStream());
             mDataOutputStream = new DataOutputStream(mSocket.getOutputStream());
             Log.d("Network", "--- Connected.");
-            resultProcess("NTS,connected," + ip + "," + port);
             new Thread(new pullServer()).start();   // Start the server getter thread
         } catch (Exception e) {
             Log.e("Network", "-x- Connection failed. Retry in 3s...");
-            resultProcess("NTS,failed," + ip + "," + port);
             try {
                 sleep(1000);
                 linkStart(ip, port);
@@ -110,32 +107,13 @@ class ServerConnection implements Runnable {
      */
     private void resultProcess(String s) {
         // Process JSON
-        if (s.startsWith("[") || s.startsWith("{")) {
-            JSONProcess.process(s);
-            return;
-        }
+        if (s.startsWith("[") || s.startsWith("{")) JSONProcess.process(s);
         else {
             // Process Command
             String[] result = s.split(",");
             switch (result[0]) {
-                case "NTS": {
-                    // Tell LocationDaemonActivity the connection status
-                    // NTS,status,ip,port
-                    Message msg = new Message();
-                    msg.what = CONNECTION_STATUS;
-                    Bundle b = new Bundle();
-                    b.putString("status", result[1]);
-                    b.putString("server_ip", result[2]);
-                    b.putString("server_port", result[3]);
-                    msg.setData(b);
-                    LocationService.sHandler.sendMessage(msg);
-                    break;
-                }
-                case "HAT":
-                    break;
-                default:
-                    Log.w("IN", "Unknown command: " + s);
-                    break;
+                case "HAT": break;
+                default: Log.w("IN", "Unknown command: " + s); break;
             }
         }
     }
@@ -165,7 +143,7 @@ class ServerConnection implements Runnable {
         sHandler.sendMessage(message);
     }
 
-    public static void requestBeacon(String mac) {
+    static void requestBeacon(String mac) {
         sendUTF("REQA," + mac);
     }
 

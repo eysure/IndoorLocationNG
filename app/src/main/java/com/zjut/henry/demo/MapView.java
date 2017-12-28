@@ -13,6 +13,7 @@ import android.util.Log;
 
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.zjut.henry.indoorlocationng.Beacon;
+import com.zjut.henry.indoorlocationng.LocationController;
 import com.zjut.henry.indoorlocationng.LocationLayer;
 import com.zjut.henry.indoorlocationng.R;
 import com.zjut.henry.indoorlocationng.RegionLayer;
@@ -77,7 +78,7 @@ class MapView extends SubsamplingScaleImageView {
         }
 
         // 绘制Router产生的位置
-        PointF p0 = LocationLayer.getLocation();
+        PointF p0 = LocationController.getLocationResult().getOriginCoordination();
         if (p0 != null && !p0.equals(0,0)) {
             // p0 = LocationFragment.barrierProcess(p0);
             PointF point0 = sourceToViewCoord(p0);
