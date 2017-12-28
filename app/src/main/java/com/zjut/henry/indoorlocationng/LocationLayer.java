@@ -2,6 +2,7 @@ package com.zjut.henry.indoorlocationng;
 
 import android.graphics.PointF;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.TimerTask;
  */
 
 public class LocationLayer extends TimerTask{
-    private static List<Beacon> sBeaconsActive = null;
+    private static List<Beacon> sBeaconsActive = new ArrayList<>();
     private static PointF sLocation = new PointF(0,0);
     private static Router sRouter = new Router(sLocation);
 
@@ -41,10 +42,11 @@ public class LocationLayer extends TimerTask{
      * 将当前Region的在线Beacon(BeaconCurrent)取出RSSI值最大的若干个, 作为新表BeaconActive
      */
     private static void updateBeaconActive(){
-        List<Beacon> beaconCurrent = RegionLayer.getBeaconsCurrent();
-        Collections.sort(beaconCurrent, new BeaconRssiComparator());
-        int quantity = Math.min(beaconCurrent.size(),GlobalParameter.LOCATION_BEACON_QUANTITY);
-        sBeaconsActive = beaconCurrent.subList(0,quantity);
+        sBeaconsActive.clear();
+        for(Beacon beacon : BeaconLinkLayer.getBeacons())if(beacon.getStatus()==4)sBeaconsActive.add(beacon);
+        Collections.sort(sBeaconsActive, new BeaconRssiComparator());
+        int quantity = Math.min(sBeaconsActive.size(),GlobalParameter.LOCATION_BEACON_QUANTITY);
+        sBeaconsActive = sBeaconsActive.subList(0,quantity);
     }
 
     /**

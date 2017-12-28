@@ -18,14 +18,20 @@ import java.util.TimerTask;
 public class RegionLayer {
     private static int sRegionNow = 0;
     private static SparseArray<Double> sRegionPower = new SparseArray<>();
-    private static List<Beacon> sBeaconsCurrent = new ArrayList<>();
-    static boolean sLock = false;
 
     /**
-     * 选择功率最大的楼层
+     * 计算当前在线Beacon中每个Region的功率和, 并返回功率最大的楼层
      * @return Region ID (无法定位则返回0)
      */
-    private static int selectMaxPowerRegion(){
+    private static int regionPowerUpdate(){
+        sRegionPower.clear();
+        for(Beacon beacon : BeaconLinkLayer.getBeacons()){
+            if(beacon.getStatus() >= 3) {
+                int regionID = beacon.getRegionID();
+                if(regionID!=0) sRegionPower.put(regionID, sRegionPower.get(regionID, 0D) + beacon.getRsmw());
+            }
+        }
+
         int regionID = 0;
         double max=0;
         for(int i = 0; i< sRegionPower.size(); ++i){
@@ -38,34 +44,21 @@ public class RegionLayer {
     }
 
     /**
-     * 计算当前在线Beacon中每个Region的功率和
-     */
-    public static void regionPowerUpdate(){
-        sRegionPower.clear();
-        for(Beacon b : BeaconLinkLayer.getBeaconsOnline()){
-            int regionID = b.getRegionID();
-            sRegionPower.put(regionID, sRegionPower.get(regionID,0D)+b.getRsmw());
-        }
-    }
-
-    /**
      * 定时器任务: 地点判断与转化
      */
     static TimerTask sRegionSwift = new TimerTask() {
         @Override
         public void run() {
-            regionPowerUpdate();
-            int regionID = selectMaxPowerRegion();
+            int regionID = regionPowerUpdate();
             if(regionID!=sRegionNow){
-                sLock = true;
-                sBeaconsCurrent.clear();
-                for(Beacon beacon : BeaconLinkLayer.getBeaconsOnline()) {
-                    if (beacon.getRegionID() == regionID) sBeaconsCurrent.add(beacon);
+                sRegionNow = regionID;
+                for(Beacon beacon : BeaconLinkLayer.getBeacons()) {
+                    if(beacon.getStatus() >= 3) {
+                        if(beacon.getRegionID() == regionID)beacon.setStatus(4);
+                        else beacon.setStatus(3);
+                    }
                 }
-                sRegionNow=regionID;
-                sLock = false;
             }
-            Log.i("RegionLayer","Power: "+sRegionPower.toString()+"\t"+"RegionNow: "+sRegionNow);
         }
     };
 
@@ -75,14 +68,6 @@ public class RegionLayer {
      */
     public static int getRegionNow() {
         return sRegionNow;
-    }
-
-    /**
-     * 获得BeaconsCurrent列表
-     * @return BeaconsCurrent列表
-     */
-    public static List<Beacon> getBeaconsCurrent() {
-        return sBeaconsCurrent;
     }
 
     /**

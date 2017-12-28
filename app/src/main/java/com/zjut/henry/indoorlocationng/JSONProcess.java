@@ -52,15 +52,17 @@ class JSONProcess {
             switch (type) {
                 case "beacon": {
                     if(jo.isNull("mac"))break;
-                    Beacon beacon = new Beacon(jo.getString("mac"));
-                    beacon.setRegionID(jo.isNull("region_id")?0:jo.getInt("region_id"));
-                    beacon.setBuilding(jo.isNull("building")?null:jo.getString("building"));
-                    beacon.setFloor(jo.isNull("floor")?null:jo.getString("floor"));
-                    beacon.setCoordination(
-                            new PointF(
-                                    jo.isNull("x")?0:jo.getInt("x"),
-                                    jo.isNull("y")?0:jo.getInt("y")));
-                    BeaconLinkLayer.addBeaconCacheFromServer(beacon);
+                    BeaconLinkLayer.beaconRegUpdate(jo);
+
+//                    Beacon beacon = new Beacon(jo.getString("mac"));
+//                    beacon.setRegionID(jo.isNull("region_id")?0:jo.getInt("region_id"));
+//                    beacon.setBuilding(jo.isNull("building")?null:jo.getString("building"));
+//                    beacon.setFloor(jo.isNull("floor")?null:jo.getString("floor"));
+//                    beacon.setCoordination(
+//                            new PointF(
+//                                    jo.isNull("x")?0:jo.getInt("x"),
+//                                    jo.isNull("y")?0:jo.getInt("y")));
+//                    BeaconLinkLayer.addBeaconCacheFromServer(beacon);
                     break;
                 }
                 default: Log.w("JSON","JSON unknown: "+ jo.toString());break;

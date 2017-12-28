@@ -54,7 +54,10 @@ public class DemoActivity extends Activity {
         initView(this);
         requestPermission();
 
-        final LocationController locationController = new LocationController(this);
+        // 建立LocationController实例
+        LocationController locationController = new LocationController(this);
+
+        // 设置位置更新监听器(必要)
         locationController.setOnLocationUpdateListener(new LocationController.OnLocationUpdateListener() {
             @Override
             public void onLocationUpdate(LocationResult locationResult) {
@@ -64,13 +67,17 @@ public class DemoActivity extends Activity {
                 Log.i("Location",locationResult.getJSONObject().toString());
             }
         });
+
+        // 设置Beacon更新监听器(可选)
         locationController.setOnBeaconUpdateListener(new LocationController.OnBeaconUpdateListener() {
             @Override
             public void onBeaconUpdate(ScanResult scanResult) {
                 // Beacon回调处理
             }
         });
-        locationController.start();
+
+        // 开始定位服务
+        locationController.start(true);
     }
 
     /**
@@ -206,29 +213,19 @@ public class DemoActivity extends Activity {
             switch (args[0]) {
                 // Show beacons
                 case "show": {
-                    switch (args[1]) {
+                    if(args.length==1) {
+                        for (Beacon beacon : BeaconLinkLayer.getBeacons())
+                            println(beacon.toString());
+                    }
+                    else switch (args[1]) {
                         case "active":
                             for (Beacon beacon : LocationLayer.getBeaconsActive())
-                                println(beacon.toString());
-                            break;
-                        case "current":
-                            for (Beacon beacon : RegionLayer.getBeaconsCurrent())
-                                println(beacon.toString());
-                            break;
-                        case "online":
-                            for (Beacon beacon : BeaconLinkLayer.getBeaconsOnline())
-                                println(beacon.toString());
-                            break;
-                        case "cache":
-                            for (Beacon beacon : BeaconLinkLayer.getBeaconsCache())
                                 println(beacon.toString());
                             break;
                         case "power":
                             println(RegionLayer.getRegionPower().toString());
                             break;
-                        default:
-                            println("show what?");
-                            break;
+                        default: break;
                     }
                     break;
                 }
@@ -266,6 +263,7 @@ public class DemoActivity extends Activity {
             }
         } catch (Exception e) {
             print(e.getLocalizedMessage(), "#EF5350");
+            e.printStackTrace();
         }
     }
 

@@ -17,7 +17,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-import static com.zjut.henry.indoorlocationng.ServerConnection.*;
 
 /**
  * LocationService
@@ -43,11 +42,8 @@ public class LocationService extends Service {
         sContext = this;
         new Thread(new ServerConnection(), "NetworkThread").start();
         ServerConnection.activateLinkStart();
-        registerPowerLock();
         sNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mBluetoothLayer = new BluetoothLayer(this);
-        new Timer("Timer - Daemon")
-                .schedule(mBluetoothDaemon,GlobalParameter.SERVICE_DAEMON_PERIOD,GlobalParameter.SERVICE_DAEMON_PERIOD);
         new Timer("Timer - Scavenger")
                 .schedule(BeaconLinkLayer.sScavenger,1000,1000);   // 启动BeaconLinkLayer的Beacon过期清理任务
         new Timer("Timer - Regin Swifter")
@@ -86,6 +82,15 @@ public class LocationService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForeground(NOTIFICATION_ID, createNotification("LocationService","Started."));
+        if(intent!=null && intent.getExtras()!=null && intent.getExtras().getBoolean("isSimpleMode")){
+            Log.i("LocationService","Service run in Simple mode");
+        }
+        else {
+            new Timer("Timer - Daemon")
+                    .schedule(mBluetoothDaemon,GlobalParameter.SERVICE_DAEMON_PERIOD,GlobalParameter.SERVICE_DAEMON_PERIOD);
+            registerPowerLock();
+            Log.w("LocationService","Service run in Daemon mode");
+        }
         return super.onStartCommand(intent, START_STICKY_COMPATIBILITY, startId);
     }
 
@@ -125,7 +130,6 @@ public class LocationService extends Service {
     private TimerTask mBluetoothDaemon = new TimerTask() {
         @Override
         public void run() {
-            Log.d("Service","Daemon TimerTask");
             Intent intent = new Intent(sContext,LocationDaemonActivity.class);
             intent.addFlags(FLAG_ACTIVITY_NEW_TASK);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -135,7 +139,7 @@ public class LocationService extends Service {
 
     /**
      * 注册PowerLock
-     * 进一步防止手机在锁屏后切断蓝牙和网络 (亲测并无卵)
+     * 进一步防止手机在锁屏后切断蓝牙和网络
      */
     private void registerPowerLock(){
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);

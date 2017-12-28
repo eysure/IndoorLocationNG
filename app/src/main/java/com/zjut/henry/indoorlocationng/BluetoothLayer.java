@@ -29,13 +29,8 @@ class BluetoothLayer {
         public void onReceive(Context context, Intent intent) {
             int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 1);
             switch (state) {
-                case BluetoothAdapter.STATE_OFF:{
-                    Toast.makeText(context, R.string.bluetooth_off_warning, Toast.LENGTH_SHORT).show();
-                    sBluetoothAdapter.enable();
-                }break;
-                case BluetoothAdapter.STATE_ON:{
-                    startScan();
-                }break;
+                case BluetoothAdapter.STATE_OFF:sBluetoothAdapter.enable();break;
+                case BluetoothAdapter.STATE_ON:startScan();break;
                 default:break;
             }
         }

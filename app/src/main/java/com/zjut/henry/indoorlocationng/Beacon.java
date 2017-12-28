@@ -23,9 +23,12 @@ public class Beacon {
     private Date onlineDate;
     private Date cacheDate;
 
+    private int status;
+
     public Beacon(String mac) {
         this.mac = mac;
         onlineDate = new Date();
+        this.status = 0;
     }
 
     public String getMac() {
@@ -89,6 +92,14 @@ public class Beacon {
         this.cacheDate = cacheDate;
     }
 
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
     /**
      * 返回此Beacon是否经过注册
      * @return true - 已注册 / false - 未注册(注册信息为空)
@@ -105,7 +116,7 @@ public class Beacon {
      * @return Beacon字符串
      */
     public String toString(){
-        return (mac != null && !"".equals(mac) ? mac : "null") + "\t" +
+        return status+" "+(mac != null && !"".equals(mac) ? mac : "null") + "\t" +
                 (building != null && !"".equals(building) ? building : "null") + ":" +
                 (floor != null && !"".equals(floor) ? floor : "null") + "\t" +
                 (coordination != null ? "("+coordination.x+","+coordination.y+")" : "N/A") + "\t" +

@@ -28,14 +28,31 @@ public class LocationController {
     }
 
     /**
-     * 启动定位守护程序 -> 启动定位服务
+     * 启动定位服务 (默认不使用守护模式)
      */
     public void start() {
+        start(false);
+    }
+
+    /**
+     * 启动定位服务
+     * 使用守护模式, 会启用定时开启Activity防止定位被系统查杀
+     * @param isDaemonMode 使用守护模式
+     */
+    public void start(Boolean isDaemonMode) {
         if (sOnLocationUpdateListener==null)
             throw new RuntimeException("还没有设定地点更新监听器, 请先实现setOnLocationUpdateListener再启动定位.");
-        Intent intent = new Intent(mContext, LocationDaemonActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        mContext.startActivity(intent);
+        if(isDaemonMode) {
+            Intent intent = new Intent(mContext, LocationDaemonActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            mContext.startActivity(intent);
+        }
+        else {
+            Intent i = new Intent(mContext,LocationService.class);
+            i.putExtra("isSimpleMode",true);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mContext.startService(i);
+        }
     }
 
     /**
@@ -63,7 +80,8 @@ public class LocationController {
      * @param locationResult 更新的位置结果
      */
     static void updateLocationResult(LocationResult locationResult) {
-        sOnLocationUpdateListener.onLocationUpdate(locationResult);
+        if(locationResult!=null && sOnLocationUpdateListener!=null)
+            sOnLocationUpdateListener.onLocationUpdate(locationResult);
     }
 
     /**
@@ -90,7 +108,8 @@ public class LocationController {
      * @param scanResult 传入的ScanResult
      */
     static void updateBeaconResult(ScanResult scanResult) {
-        if(scanResult!=null) sOnBeaconUpdateListener.onBeaconUpdate(scanResult);
+        if(scanResult!=null && sOnBeaconUpdateListener!=null)
+            sOnBeaconUpdateListener.onBeaconUpdate(scanResult);
     }
 
     /**

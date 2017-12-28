@@ -13,10 +13,10 @@ import android.util.Log;
 
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.zjut.henry.indoorlocationng.Beacon;
+import com.zjut.henry.indoorlocationng.BeaconLinkLayer;
 import com.zjut.henry.indoorlocationng.LocationController;
 import com.zjut.henry.indoorlocationng.LocationLayer;
 import com.zjut.henry.indoorlocationng.R;
-import com.zjut.henry.indoorlocationng.RegionLayer;
 import com.zjut.henry.indoorlocationng.StepNav;
 
 import java.util.ConcurrentModificationException;
@@ -54,7 +54,8 @@ class MapView extends SubsamplingScaleImageView {
 
         // Draw current beacons
         try {
-            for (Beacon beacon : RegionLayer.getBeaconsCurrent()) {
+            for (Beacon beacon : BeaconLinkLayer.getBeacons()) {
+                if(beacon.getStatus()!=4)continue;
                 PointF p = beacon.getCoordination();
                 p = sourceToViewCoord(p.x, p.y);
                 dotPaint.setStrokeWidth(5);

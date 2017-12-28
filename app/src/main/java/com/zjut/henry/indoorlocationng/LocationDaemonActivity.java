@@ -29,7 +29,7 @@ public class LocationDaemonActivity extends Activity {
             service = ServiceUtils.findServiceByName(this,"com.zjut.henry.indoorlocationng.LocationService");
             if(service==null) throw new RuntimeException("Service cannot start.");
         }
-        else Log.i("Main","Service is running. Finish.");
+        else Log.d("Daemon","Service is running. Finish.");
         finish();
     }
 
